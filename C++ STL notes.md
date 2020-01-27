@@ -13,6 +13,68 @@
   ``` 
 + functor. `greater<int>()`
 
+## Collections
+
+### Vector
++ push_back
++ assign. **mind the difference between copy**
+
+### list
++ splice. 
+  **This effectively inserts those elements into the container and removes them from x, altering the sizes of both containers.**
+  ```cpp
+  // entire list (1)	
+  void splice (iterator position, list& x);
+  //single element (2)	
+  void splice (iterator position, list& x, iterator i);
+  //element range (3)	
+  void splice (iterator position, list& x, iterator first, iterator last);
+  ```
+  **for a bigger notes**
+  after the splice operation, the `i` iterator and value it points to will not change, it means, the iterator will not be invalidated. Moreover, there is no copy and construction, there are only the changes about the pointers.  
+
++ push_back, pop_back
++ emplace_back, emplace_front
++ `front()` or `list.back()` 直接返回最后一个元素
++ assign. `l1.assign(l2.begin(), l2.last())`
+
+**Difference between assign and copy**
+
+copy can only be used in copy between containers that are the same types.
+but `list.assign()` works between different types as long as they support assignment
+operator. 
+
+```cpp
+list<A> l1;
+list<B> l2;
+l1.assign(l2.begin(), l2.end());
+```
+
+
+### Map
+
++ `Map[key]` this operation will defaultly add key to map
++ `map<string, int>` construction.
++ `map.find()`
++ `map.erase()`
+
+## Iterators
+
++ `back_inserter()`. push_back functionalities
++ `inserter(vector, vector.end())`.
++ `ostream_iterator<string> os(cout, " ")`
+
+### stringstream
+
+```cpp
+std::stringstream buffer;
+buffer << "#";
+std::copy(values.begin(), values.end(), std::ostream_iterator<int>(buffer, "#"));
+
+cout<<buffer.str()<<endl;
+```
+
+
 ## Algorithm
 
 **all the algorithms changes inplace**
@@ -53,3 +115,31 @@
 ### Set
 + `set_union()`
 + `set_difference()`
+
+## Function Objects
+
+### Arithmetic
++ plus
++ minus
++ negate
++ multiplies
++ divides
++ modules
+
+### Relational
++ less
++ than
++ equal_to
++ greater_equal
++ less_equal
++ not_equal_to
+
+### Logical
++ logical_and
++ logical_or
++ logical_not
+
+## Function Objects Adapters
+
++ bind2nd
++ not1, negate adapter

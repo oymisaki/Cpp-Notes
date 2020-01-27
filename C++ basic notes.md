@@ -177,7 +177,11 @@ int main()
 function ( shared_ptr<int>(new int), g( ) ); 
 ```
 
-### shared_ptr & make_shared
+### A basic use of weak_ptr together with shared_ptr
+倘若树的节点，同时包含指向子节点的指针和父节点的指针，如果都用`shared_ptr`，会出现循环引用的问题。
+因此可以把指向父节点的指针声明成 `weak_ptr`
+
+### shared_ptr and make_shared
 
 >std::shared_ptr manages two entities:
 >the control block (stores meta data such as ref-counts, type-erased deleter, etc)

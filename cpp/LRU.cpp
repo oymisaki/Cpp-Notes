@@ -43,4 +43,4 @@ public:
         m_list.emplace_front(key, value); //create new node in list
         m_map[key] = m_list.begin();      //create correspondence between key and node
     }
-}
+};

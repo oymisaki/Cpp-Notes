@@ -38,6 +38,7 @@ int manacher(string s)
     std::copy(s.begin(), s.end(), std::ostream_iterator<char>(buffer, "#"));
     string T = buffer.str();
 
+    vector<int> P(T.size(), 1);
     int C = 0, R = -1, rad; 
     for (int i = 0; i < T.length(); ++i) {
         if (i <= R) {

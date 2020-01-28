@@ -30,8 +30,20 @@
   //element range (3)	
   void splice (iterator position, list& x, iterator first, iterator last);
   ```
-  **for a bigger notes**
+  **Iterator Validaty**
   after the splice operation, the `i` iterator and value it points to will not change, it means, the iterator will not be invalidated. Moreover, there is no copy and construction, there are only the changes about the pointers.  
+  ```cpp
+  list<int> l;
+  l.push_back(1);    
+  l.push_front(2);
+
+  auto e = ++l.begin();
+  cout <<*e<<endl; // 1
+  l.erase(l.begin());
+  cout << *e<<endl; // 1
+
+  cout << (++e == l.end()); // true
+  ```
 
 + push_back, pop_back
 + emplace_back, emplace_front

@@ -1,15 +1,13 @@
 # Notes
 
-## C++ basic
-
-### signed char and unsigned char
+## signed char and unsigned char
 
 + different from plain `char`, plain `char` is implemented by the compiler. Using it in arithmetic is dangerous and can cause different behaviour under different compilers.
 
-### size_t and unsigned int
+## size_t and unsigned int
 >The actual type of size_t is platform-dependent; a common mistake is to assume size_t is the same as unsigned int, which can lead to programming errors, particularly as 64-bit architectures become more prevalent.
 
-### conversion between `string` and `char*`
+## conversion between `string` and `char*`
 
 + `char*` -> `string`. 直接赋值
 + `string` -> `char*`.
@@ -34,13 +32,13 @@ int main()
 }
 ```
 
-### 函数指针
+## 函数指针
 
 ```c++
  vector<int> (*fptr)( int ) = ...;
 ```
 
-### using and typedef
+## using and typedef
 
 + `typedef void (*FP) (int, const std::string&);`
 + `using FP = void (*) (int, const std::string&);`
@@ -53,14 +51,14 @@ int main()
   // typedef can not do this
   Vec<int> vec;
   ```
-### malloc & new
+## malloc & new
 
 + malloc is **function**. new is an **operator**
 + new delete 会自动执行构造和析构函数，malloc free不会
 + 成功时new会返回对象类型的指针，而malloc返回void *
 + 失败时new会抛出异常，malloc返回NULL
 
-### placement new
+## placement new
 不分配新内存，只构造对象的new
 ```cpp
 char memory[sizeof(Fred)];     // Line #1
@@ -84,7 +82,7 @@ T a;
 new (p) T{a};
 ```
 
-### move semantics and rvalue reference
+## move semantics and rvalue reference
 
 + 简单来说是把一个对象转型成rvalue. static_cast<T&&>(t);
 + `foo(std::move(a))` 会调用 `foo(T&& a)` 而不是 `foo(T& a)` 或者 `foo(T a)`
@@ -116,13 +114,23 @@ Usage in `unique_ptr`
 del = std::move(right_value.del);
 ```
 
-### perfect forwarding
+## perfect forwarding
 
 Usage in 参数推倒。
 
 和 `std::move` 一样，`std::forward` 也是一种转型，但`std::move`蕴含被转型的对象即将不被使用或即将被赋予新的值的含义, 而`std::forward`没有这层含义。
 
 因此`std::forward`经常用于参数比如
+
+## Smart Pointers
+
+### unique_ptr
++ `release()` 解除控制内存的权利和义务，返回`raw pointer`
++ `reset()` 释放内存
+
+### weak_ptr
++ `lock()` 
++ `expired()` 是否引用计数为0
 
 ### do not use get() in shared_ptr
 
@@ -203,9 +211,12 @@ struct Array_Deleter
 int* pint = new int[100];
 shared_ptr<int> p (pint, Array_Deleter<int>());
 ```
+在当使用new开辟的数组时，使用deleter是必须的，也可以用`lambda表达式`写成
+```cpp
+shared_ptr<int> pp(pint, [](int* p) {delete[] p; });
+```
 
-
-### NULL and nullptr
+## NULL and nullptr
 
 `nullptr` 不能转型成 `int`
 
@@ -225,7 +236,7 @@ int main()
 } 
 ```
 
-### volatile
+## volatile
 
 **prevent aggresssive optimization**
 ```cpp
@@ -234,17 +245,17 @@ while (i == 100) ...
 ```
 i can change unexpectedly from outside the program, thus makes it volatile.
 
-### type conversion
+## type conversion
 在C++中built-in type 转换使用static_cast，type conversion between class 用dynamic_cast，to remove the const 用const_cast，conversion between pointers使用reinterpret_cast。
 
-### (typename) vs. static_cast
+## (typename) vs. static_cast
 `(typename)` is a strong conversion, like `reinterpret_cast`, while static_cast pose some type checks and constraints.
 
-### inline vs. macro
+## inline vs. macro
 
 inlining can reduce the costs of function calling stack. it still has type check in function, so safer than macro #define.
 
-### override & final
+## override & final
 
 to detect more errors in compilation about the inheritance of virtual function, to make sure it overrides a virtual function in base class.
 
@@ -254,7 +265,7 @@ to detect more errors in compilation about the inheritance of virtual function, 
 
 `class Base {...} final` 说明不能被继承
 
-### emplace_back
+## emplace_back
 在复杂情形中，有时候需要先创建对象在传入`insert`作为参数，带来了额外的开销。
 `emplace` 直接从传入的参数中创建对象，进一步优化了开销。
 
@@ -266,7 +277,7 @@ m.insert(std::make_pair(4, Complicated(anInt, aDouble, aString)));
 m.emplace(4, anInt, aDouble, aString);
 ```
 
-### lambda 表达式
+## lambda 表达式
 
 + `[&]` 默认引用捕获
 + `[=]` 默认值捕获
@@ -274,14 +285,14 @@ m.emplace(4, anInt, aDouble, aString);
 + `[=, &i]` 默认值捕获，i以引用捕获
 + `[&]( auto x ) -> int { return x;  }`
 
-### decltype & auto
+## decltype & auto
 
 `auto` will be exactly the same as the type of the return value, if a function returns a reference, then the auto will also be reference.
 
 `decltype` will only take the type of the input.
 
-## 操作系统
-### 线程与进程的关系
+# 操作系统
+## 线程与进程的关系
 + cannot execute independently
 
 + 线程属于进程，并运行在进程空间内，划分尺度小于进程，多个线程共享内存
@@ -289,16 +300,16 @@ m.emplace(4, anInt, aDouble, aString);
 + 多线程的意义在于一个应用程序中，有多个执行部分可以同时执行
 + 一个应用程序运行后被抽象为一个进程
 
-### heap & stack
+## heap & stack
 
 + stack. Allocate when a function calls, free when function returns
 + heap. Dynamically allocate, controlled by the program
 
-### 虚拟内存
+## 虚拟内存
 
 应用程序 use 连续的virtual memory space. 但实际上是segments of physical memory space，还有一些储存outside storage上，在需要的时候进行data swap。
 
-### 编译器与解释器
+## 编译器与解释器
 
 compiler compiles the codes into lower level codes and generate executable which can execute indepently.
 
@@ -307,7 +318,7 @@ interpreter runs the codes, the script will always need an interpreter to run.
 编译器将高级代码编译成低级代码，生成的可执行文件可以独立运行。
 解释器直接运行程序，程序总是需要解释器来运行。
 
-### red black tree
+## red black tree
 + every node is red or black
 + root is black
 + every leaf is black

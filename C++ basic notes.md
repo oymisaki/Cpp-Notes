@@ -81,6 +81,7 @@ Fred* f = new(place) Fred(std::move(*iter));
 T a;
 new (p) T{a};
 ```
+必须手动调用析构释放. `p->~Fred()`, 这也是唯一需要手动调用析构函数的情况。
 
 ## move semantics and rvalue reference
 
@@ -216,7 +217,8 @@ shared_ptr<int> p (pint, Array_Deleter<int>());
 shared_ptr<int> pp(pint, [](int* p) {delete[] p; });
 ```
 
-## NULL and nullptr
+## C++ 11 keyword
+### NULL and nullptr
 
 `nullptr` 不能转型成 `int`
 
@@ -236,7 +238,7 @@ int main()
 } 
 ```
 
-## volatile
+### volatile
 
 **prevent aggresssive optimization**
 ```cpp
@@ -244,6 +246,52 @@ int i = 100;
 while (i == 100) ...
 ```
 i can change unexpectedly from outside the program, thus makes it volatile.
+
+### override & final
+
+to detect more errors in compilation about the inheritance of virtual function, to make sure it overrides a virtual function in base class.
+
+`void func() const override` 说明必须重载基类的某个虚函数
+
+`void func() const final` 说明不能再被重载
+
+`class Base {...} final` 说明不能被继承
+
+### const & mutable
+
+M&M rule. `mutable` and `mutex` go together. 
+简单来说，mutable修饰的object可以在const修饰的成员函数中被修改，体现出一种物理上可被修改，但逻辑上不变的特性。
+典型的例子是 `mutex`
+
+```cpp
+class ThreadsafeCounter {
+  mutable std::mutex m; // The "M&M rule": mutable and mutex go together
+  int data = 0;
+ public:
+  int get() const {
+    std::lock_guard<std::mutex> lk(m);
+    return data;
+  }
+  void inc() {
+    std::lock_guard<std::mutex> lk(m);
+    ++data;
+  }
+};
+```
+
+### lambda 表达式
+
++ `[&]` 默认引用捕获
++ `[=]` 默认值捕获
++ `[&, i]` 默认引用捕获，i以值捕获
++ `[=, &i]` 默认值捕获，i以引用捕获
++ `[&]( auto x ) -> int { return x;  }`
+
+### decltype & auto
+
+`auto` will be exactly the same as the type of the return value, if a function returns a reference, then the auto will also be reference.
+
+`decltype` will only take the type of the input.
 
 ## type conversion
 在C++中built-in type 转换使用static_cast，type conversion between class 用dynamic_cast，to remove the const 用const_cast，conversion between pointers使用reinterpret_cast。
@@ -254,16 +302,6 @@ i can change unexpectedly from outside the program, thus makes it volatile.
 ## inline vs. macro
 
 inlining can reduce the costs of function calling stack. it still has type check in function, so safer than macro #define.
-
-## override & final
-
-to detect more errors in compilation about the inheritance of virtual function, to make sure it overrides a virtual function in base class.
-
-`void func() const override` 说明必须重载基类的某个虚函数
-
-`void func() const final` 说明不能再被重载
-
-`class Base {...} final` 说明不能被继承
 
 ## emplace_back
 在复杂情形中，有时候需要先创建对象在传入`insert`作为参数，带来了额外的开销。
@@ -277,28 +315,10 @@ m.insert(std::make_pair(4, Complicated(anInt, aDouble, aString)));
 m.emplace(4, anInt, aDouble, aString);
 ```
 
-## lambda 表达式
 
-+ `[&]` 默认引用捕获
-+ `[=]` 默认值捕获
-+ `[&, i]` 默认引用捕获，i以值捕获
-+ `[=, &i]` 默认值捕获，i以引用捕获
-+ `[&]( auto x ) -> int { return x;  }`
-
-## decltype & auto
-
-`auto` will be exactly the same as the type of the return value, if a function returns a reference, then the auto will also be reference.
-
-`decltype` will only take the type of the input.
 
 # 操作系统
-## 线程与进程的关系
-+ cannot execute independently
 
-+ 线程属于进程，并运行在进程空间内，划分尺度小于进程，多个线程共享内存
-+ 每个独立的线程有一个程序运行的入口、顺序执行序列和程序的出口。但是线程不能够独立执行，必须依存在应用程序中，由应用程序提供多个线程执行控制
-+ 多线程的意义在于一个应用程序中，有多个执行部分可以同时执行
-+ 一个应用程序运行后被抽象为一个进程
 
 ## heap & stack
 
@@ -325,6 +345,11 @@ interpreter runs the codes, the script will always need an interpreter to run.
 + if a node is red, the twos childs are black
 + every node has same amount of black nodes in their path to their descendant leaves.
 
+## Cache locality.
+分为
++ temporal locality
++ spatial locality
+多级存储下，连续的内存，访问更快。
 
 
 

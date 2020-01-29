@@ -70,11 +70,25 @@ l1.assign(l2.begin(), l2.end());
 + `map.find()`
 + `map.erase()`
 
+**boost::flat_map -- Faster than O(1)?**
+查找和遍历更快，插入和删除更慢.更少的内存。缓存优化。`Cache Locality` 问题，计算机多级存储，`L1` 最快，由于`vector`是连续的，因此可以一次性载入缓存，使得访问其他元素会更快一些。而对于 `linked list`这样的结构，访问会要慢很多。
+>+ Faster lookup than standard associative containers
+>+ Much faster iteration than standard associative containers
+>+ Less memory consumption for small objects (and for big objects if shrink_to_fit is used)
+>+ Improved cache performance (data is stored in contiguous memory)
+>+ Non-stable iterators (iterators are invalidated when inserting and erasing elements)
+>+ Non-copyable and non-movable values types can't be stored
+>+ Weaker exception safety than standard associative containers (copy/move constructors can throw when shifting values in erasures and insertions)
+>+ Slower insertion and erasure than standard associative containers (specially for non-movable types)
+
 ## Iterators
 
 + `back_inserter()`. push_back functionalities
 + `inserter(vector, vector.end())`.
 + `ostream_iterator<string> os(cout, " ")`
++ `distance(first, last)` 返回距离
++ `advance(first, steps)` 前移
+
 
 ### stringstream
 
@@ -116,7 +130,11 @@ cout<<buffer.str()<<endl;
 
 ### Generation, Mutation
 + `generate(first, last, gen)`, Eg. `generate (myvector.begin(), myvector.end(), RandomNumber)`
-+ `for_each(first, last, function)`
++ `for_each(first, last, function)`. 注意 `std::mem_fn`的使用
+  ```cpp
+  std::for_each(threads.begin(),threads.end(),
+       std::mem_fn(&std::thread::join));
+  ```
 + `transform(first, last, function)`
 
 ### Numeric
@@ -155,3 +173,17 @@ cout<<buffer.str()<<endl;
 
 + bind2nd
 + not1, negate adapter
++ bind. 可使用 `_1 placeholder` 
+  ```cpp
+  void f(int n1, int n2, int n3, const int& n4, int n5)
+  {
+    std::cout << n1 << ' ' << n2 << ' ' << n3 << ' ' << n4 << ' ' << n5 << '\n';
+  }
+
+  auto f1 = std::bind(f, _2, 42, _1, std::cref(n), n);
+  n = 10;
+  f1(1, 2, 1001); // 1 为 _1 所绑定， 2 为 _2 所绑定，不使用 1001
+                  // 进行到 f(2, 42, 1, n, 7) 的调用
+  ```
+  其中, `_1` 是参数位置占位符, `std::ref`, `std::cref` 是一种 `reference wrapper`, 
+  因为 `bind` 的参数默认传值。

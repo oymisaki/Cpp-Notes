@@ -139,105 +139,201 @@ void get_and_process_data()
 }
 ```
 
-
-### Thread类
-
-+ 默认构造函数，创建一个空的 thread 执行对象。
-+ 初始化构造函数，创建一个 thread对象，该 thread对象可被 joinable，新产生的线程会调用 fn 函数，该函数的参数由 args 给出。
-+ 拷贝构造函数(被禁用)，意味着 thread 不可被拷贝构造。
-+ move 构造函数，move 构造函数，调用成功之后 x 不代表任何 thread 执行对象。
+### Lazy initialization -- 锁以外的替代措施
+单线程的典型延迟初始化例程.
 ```cpp
+std::shared_ptr<some_resource> resource_ptr;
+void foo()
+{
+  if(!resource_ptr)
+  {
+    resource_ptr.reset(new some_resource);  // 先检查是已经被初始化
+  }
+  resource_ptr->do_something();
+}
+```
+
+线程安全的写法如下，由于每次初始化都会加锁，使得效率变低，如果采用**双重检查锁**（在获取锁之前就事先调用资源进行检查，加锁之后再检查）的方式虽然会提高效率，但是会引入**条件竞争**的问题。
+```cpp
+std::shared_ptr<some_resource> resource_ptr;
+std::mutex resource_mutex;
+
+void foo()
+{
+  std::unique_lock<std::mutex> lk(resource_mutex);  // 所有线程在此序列化 
+  if(!resource_ptr)
+  {
+    resource_ptr.reset(new some_resource);  // 只有初始化过程需要保护 
+  }
+  lk.unlock();
+  resource_ptr->do_something();
+}
+```
+
+最好的写法，使用 `call_once` `once_flag` 而不是 `mutex`锁
+```cpp
+std::shared_ptr<some_resource> resource_ptr;
+std::once_flag resource_flag;  // 1
+
+void init_resource()
+{
+  resource_ptr.reset(new some_resource);
+}
+
+void foo()
+{
+  std::call_once(resource_flag,init_resource);  // 可以完整的进行一次初始化
+  resource_ptr->do_something();
+}
+```
+
+### Reader-Writer Lock
+有时需要共享读，互斥写，可以使用 `boost::shared_lock`，`std::shared_lock` since `c++ 17`.
+
+`boost::shared_lock`允许多个线程同时对某个共享数据上锁。在读者写者模式时，读者上共享锁，写者上独占锁。
+
+```cpp
+class database
+{
+  int data;
+  mutable boost::shared_mutex entry_mutex;
+
+public:
+  int reader() const
+  {
+    boost::shared_lock<boost::shared_mutex> lk(entry_mutex);
+    return data;
+  }
+
+  void writer() const
+  {
+    std::lock_guard<boost::shared_mutex> lk(entry_mutex);
+    // ... do something 
+  }
+
+};
+```
+
+## 同步并发操作 -- condition variables and futures
+
+让某线程等待另一个进程完成任务
++ 反复询问。占用CPU
++ 固定等待间隙
+  ```cpp
+  bool flag;
+  std::mutex m;
+
+  void wait_for_flag()
+  {
+  std::unique_lock<std::mutex> lk(m);
+  while(!flag)
+  {
+    lk.unlock();  // 1 解锁互斥量
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));  // 2 休眠100ms
+    lk.lock();   // 3 再锁互斥量
+  }
+  ```
++ 等待条件达成
+
+### condition variable
+定义在 `<condition_variable>` 头文件中.
++ `notify_one()` 唤醒一个线程
++ `wait(lock, []{return !data.empty()})` 等待直到谓词，起到了替代外部循环的作用
+  ```cpp
+  while(data.empty())
+  {
+    cv.wait(lock);
+  }
+
+  // 等价于
+  cv.wait(lock, []{return !data.empty()});
+  ```
+  之所以是要循环确认，是因为不能保证睡眠的线程**被谁唤醒**
+
+
+**生产者消费者模型**
+
+```cpp
+std::mutex mut;
+std::queue<int> data_queue;  // 1
+std::condition_variable cv;
+
+void producer_thread()
+{
+  std::lock_guard<std::mutex> lk(mut);
+  // produce
+  cv.notify();
+}
+
+void consumer_thread()
+{
+  while(true)
+  {
+    std::unique_lock<std::mutex> lk(mut);
+    cv.wait(lk, []{return !data_queue.empty();});
+    
+    // consume
+
+    lk.unlock();
+
+    // process
+  }
+}
+```
+
+消费者不能使用 `lock_guard` 的原因是
++ `wait()` 可能会反复调用`unlock()`，每次wait都会调用unlock
++ 为了粒度和效率考虑，获得数据后就释放锁
+
+### 等待一次性事件
+
+**头文件<future>**
+
+等待一个事件或者接受一个`result`，与 `std::async` 可以一起用, `std::async(func)`会在执行完后返回一个`future<>()`对象，
+需要使用对象时调用，`future_obj.get()` 来获取结果，并且如果此时结果没有计算完成还会 `block` 当前进程.
+
+**`std::async` 几种传入参数的方式**
++ `std::async(&X::foo,&x,42,"hello")`
++ `std::async(&X::bar,x,"goodbye")` x会拷贝
++ `std::async(Y(),3.141)` 移动构造
++ `std::async(std::ref(y),2.718)`  调用y(2.718)
+
+```cpp
+#include <future>
 #include <iostream>
-#include <utility>
-#include <thread>
-#include <chrono>
-#include <functional>
-#include <atomic>
- 
-void f1(int n)
-{
-    for (int i = 0; i < 5; ++i) {
-        std::cout << "Thread " << n << " executing\n";
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-}
- 
-void f2(int& n)
-{
-    for (int i = 0; i < 5; ++i) {
-        std::cout << "Thread 2 executing\n";
-        ++n;
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-}
- 
+
+int find_the_answer_to_ltuae();
+void do_other_stuff();
 int main()
 {
-    int n = 0;
-    std::thread t1; // t1 is not a thread
-    std::thread t2(f1, n + 1); // pass by value
-    std::thread t3(f2, std::ref(n)); // pass by reference
-    std::thread t4(std::move(t3)); // t4 is now running f2(). t3 is no longer a thread
-    t2.join();
-    t4.join();
-    std::cout << "Final value of n is " << n << '\n';
+  std::future<int> the_answer=std::async(find_the_answer_to_ltuae);
+  do_other_stuff();
+  std::cout<<"The answer is "<<the_answer.get()<<std::endl;
 }
 ```
 
-## join
-`thread.join()` 会让当前线程等待 加入的`tread`执行完再往后执行。
+### 传递和封装任务 -- package_task
 
-## std::this_thread::yield
-yield 让出时间片和CPU让其他程序执行. `while(!Done) yield()`. 当前线程并没有停止，而是让出了优先级，执行完新的任务后会回过头询问。
-
-## mutex 
-既不允许复制构造也不允许移动拷贝。
-
+**生成一个package_task对象并绑定到某future**
 ```cpp
-#include <iostream>
-#include <thread>
-#include <mutex>
-
-std::mutex m;//you can use std::lock_guard if you want to be exception safe
-int i = 0;
-
-void makeACallFromPhoneBooth() 
-{
-    m.lock();//man gets a hold of the phone booth door and locks it. The other men wait outside
-      //man happily talks to his wife from now....
-      std::cout << i << " Hello Wife" << std::endl;
-      i++;//no other thread can access variable i until m.unlock() is called
-      //...until now, with no interruption from other men
-    m.unlock();//man lets go of the door handle and unlocks the door
-}
-
-int main() 
-{
-    //This is the main crowd of people uninterested in making a phone call
-
-    //man1 leaves the crowd to go to the phone booth
-    std::thread man1(makeACallFromPhoneBooth);
-    //Although man2 appears to start second, there's a good chance he might
-    //reach the phone booth before man1
-    std::thread man2(makeACallFromPhoneBooth);
-    //And hey, man3 also joined the race to the booth
-    std::thread man3(makeACallFromPhoneBooth);
-
-    man1.join();//man1 finished his phone call and joins the crowd
-    man2.join();//man2 finished his phone call and joins the crowd
-    man3.join();//man3 finished his phone call and joins the crowd
-    return 0;
-}
+std::packaged_task<void()> task(f);  
+// 
+std::future<void> res=task.get_future(); 
 ```
 
-## lock_guard
-Always use `std::lock_guard` rather than calling `lock()` and `unlock()` on the `mutex`. The latter is far more error prone and not exception safe.
+### std::promises
+Lowest level
 
-在 lock_guard 对象构造时，传入的 Mutex 对象(即它所管理的 Mutex 对象)会被当前线程锁住。在lock_guard 对象被析构时，它所管理的 Mutex 对象会自动解锁，由于不需要程序员手动调用 lock 和 unlock 对 Mutex 进行上锁和解锁操作，因此这也是最简单安全的上锁和解锁方式，**尤其是在程序抛出异常后先前已被上锁的 Mutex 对象可以正确进行解锁操作，极大地简化了程序员编写与 Mutex 相关的异常处理代码**。
+### shared_future -- 可拷贝的future
+因为提供了拷贝机制，因此可以被多个线程拥有，因此可以让多个现场同时等待一个`future
 
-## thread safety
+### future and async, package_task, promises
 
-## yield vs. condition_variable
+**async, package_task, promises彼此类似并且逐渐深入底层**
 
-`while(!condition) yield();` will constantly ask the cpu for some resources.
-`while(!not_ready) cv.wait()` will make the thread skeep until `cv.notify()` wakes it up.
++ `async`是最理想化的，在给`async`传入参数的同时创建了线程并且只能接收一个返回值。
++ `package_task` 则把 `async` 做的工作拆开，`package_task`专门将要执行的工作封装成一个`callable`，什么时候创建进程并调用`task`由用户决定，并且`package_task`在创建时就与`future`绑定
++ `promises` 更往底层，可以用来实现 `package_task`
+
+
+

@@ -119,6 +119,17 @@ public:
 };
 ```
 
+`adopt_lock` 和 `defer_lock` 体现在创建`lock_guard`对象和取得锁的时机不一样.
+```cpp
+std::unique_lock<std::mutex> lk1(e1.m, std::defer_lock);
+std::unique_lock<std::mutex> lk2(e2.m, std::defer_lock);
+std::lock(lk1, lk2);
+
+std::lock(lhs.m, rhs.m);
+std::lock_guard<std::mutex> lock_a(lhs.m, std::adopt_lock);
+std::lock_guard<std::mutex> lock_b(rhs.m, std::adopt_lock);
+```
+
 **避免死锁的进阶指导**
 + 尽可能只获得一个锁
 + 规定顺序
@@ -335,5 +346,54 @@ Lowest level
 + `package_task` 则把 `async` 做的工作拆开，`package_task`专门将要执行的工作封装成一个`callable`，什么时候创建进程并调用`task`由用户决定，并且`package_task`在创建时就与`future`绑定
 + `promises` 更往底层，可以用来实现 `package_task`
 
+## C++内存模型和原子操作
+
+### Memory Order
+
+**为什么需要Memory Order**
+> 即使是简单的语句，C++ 也不保证是原子操作。
+> CPU 可能会调整指令的执行顺序。
+> 在 CPU cache 的影响下，一个 CPU 执行了某个指令，不会立即被其它 CPU 看见。
+
+为了有助于理解，参见
+
+[C++ atomics and memory ordering](https://bartoszmilewski.com/2008/12/01/c-atomics-and-memory-ordering/)
+
+[What does memory model in C++ mean?](https://stackoverflow.com/questions/6319146/c11-introduced-a-standardized-memory-model-what-does-it-mean-and-how-is-it-g)
+
+[理解C++中的Memory Order](http://senlinzhan.github.io/2017/12/04/cpp-memory-order/)
+
+### atomic模板类 -- 原子类型
+
+**原子操作没有中间状态，要么已完成，要么未开始**
++ `load()` 取值
++ `store()` 存值
++ `exchange()` 取出旧值，存入新值
++ `fetch_add()` 即是`+=`
+
+所有的操作都支持 `memory_order` 参数
+
+
+`Relaxed ordering`
+仅仅保证单线程内有序，CPU指令不会被打乱
+> You and a friend both agree that x=false and y=false. One day, you send him a letter telling him that x=true. The next day you send him a letter telling him that y=true. You definitely send him the letters in the right order.
+
+> Sometime later, your friend receives a letter from you saying that y=true. Now what does your friend know about x? He probably already received the letter that told him x=true. But maybe the postal system temporarily lost it and he'll receive it tomorrow. So for him, x=false and x=true are both valid possibilities when he receives the y=true letter.
+
+> So, back to the silicon world. Memory between threads has no guarantee at all that writes from other threads turn up in any particular order, and so the 'delayed x' is totally a possibility. All adding an atomic and using relaxed does is stop two threads racing on a single variable from becoming undefined behaviour. It makes no guarantees at all to ordering. Thats what the stronger orderings are for.
+
+`memory_order_seq_cst`
+> seq_cst stores require flushing the store buffer so this thread's later reads are delayed until after the store is globally visible.
+
+不会受Cache影响，先进行的读写一定会被**观察**到
+**只有一个全序** 当一个顺序被观察到时，就不可能以其他顺序被观察到。
+
+其中`memory_order_release` 和 `memory_order_acquire`
+
+不允许CPU打乱多个线程的读写操作
++ 在store()之前的所有写操作，不允许被移动到这个store()的后面。
++ 在load()之后的所有读操作，不允许被移动到这个load()的前面
+
+**真难**
 
 

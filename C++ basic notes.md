@@ -351,5 +351,8 @@ interpreter runs the codes, the script will always need an interpreter to run.
 + spatial locality
 多级存储下，连续的内存，访问更快。
 
+## 字节对齐
+**偏移量是子对象字节数的倍数**
+
 
 

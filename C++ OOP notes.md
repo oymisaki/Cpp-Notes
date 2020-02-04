@@ -20,3 +20,14 @@ And when `Base * p = new Derived()`, the derived class will also generate his ow
 
 ## protected, private, public
 derived class can visit protected member of base class, but not the private members.
+
+>**The access modifiers work on class level, and not on object level.**
+同一个类的不同对象**可以访问**彼此的**私有成员**，这在拷贝，赋值中常用。
+
+## swap and copy idiom
+
+用`friend swap` 达成`assignment` 的目的
++ 优点，不需要进行`self-assignment check`
++ 缺点，需要声明 `tmp` 或者将参数改为 `传值`，带来效率损失
+
+**move assignment不要用**

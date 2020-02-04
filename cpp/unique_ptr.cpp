@@ -23,7 +23,8 @@ public:
         : un_ptr(pp), del(dd) {}
     ~unique_ptr()
     {
-        del(un_ptr);
+        if(un_ptr)
+            del(un_ptr);
     }
 
     unique_ptr(const unique_ptr &) = delete;
@@ -31,18 +32,21 @@ public:
 
     // 右值引用 c++ 11
     // 重载右值引用拷贝构造函数
-    unique_ptr(unique_ptr &&right_value) : un_ptr(right_value.un_ptr), del(std::move(right_value.del))
+    // 注意noexcept
+    unique_ptr(unique_ptr &&rvalue) noexcept
+    : un_ptr(right_value.un_ptr), del(std::move(right_value.del))
     {
         right_value.un_ptr = nullptr;
     }
 
     // 赋值
+    // move constructor and swap idiom
     unique_ptr &operator=(unique_ptr &&right_value) noexcept
     {
         if (this != &right_value)
         {
-            std::cout << "operator && right_value " << std::endl;
-            del(un_ptr);
+            if(un_ptr)
+                del(un_ptr);
             un_ptr = right_value.un_ptr;
 
             // 不是复制而是直接拿取
@@ -61,16 +65,20 @@ public:
     }
 
     // 释放资源
-    void reset() { del(un_ptr); }
-    void reset(T *q)
+    void reset()
     {
         if (un_ptr)
-        {
             del(un_ptr);
+    }
+
+    void reset(T *q)
+    {
+        if (un_ptr != q)
+        {
+            if (un_ptr)
+                del(un_ptr);
             un_ptr = q;
         }
-        else
-            un_ptr = nullptr;
     }
 
     void swap(unique_ptr &other) noexcept
@@ -79,7 +87,7 @@ public:
         swap(un_ptr, other.un_ptr);
         swap(del, other.del);
     }
-    
+
     T *get() { return un_ptr; }
     D &get_deleter() { return del; }
     T &operator*() { return *un_ptr; }

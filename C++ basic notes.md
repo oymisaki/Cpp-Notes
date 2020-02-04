@@ -293,6 +293,16 @@ class ThreadsafeCounter {
 
 `decltype` will only take the type of the input.
 
+### noexcept
+**允许编译器做出更多更好的优化**
+鼓励在以下函数中使用
++ move constructor
++ move assignment
++ destructor. 编译器默认  
+
+**Why move constructors need nonexcept?**
+当 `copy constuctor` 出现异常，可以保证源对象不变，新对象没有创造，而 `move constructor` 异常可能会使得源对象变化，从而带来不确定性，因此在 `vector` 等容器中使用 `resize()` 等函数时，涉及到创建一片新的内存空间，并将旧的数据复制过去，此时使用 `move constructor` 会更快一点，但 `std::vector`会确认对象的 `move constrcutor` 是 `noexcept` 的，否则出于安全考虑，他还是会调用 `copy constructor`，即便效率更低。 
+
 ## type conversion
 在C++中built-in type 转换使用static_cast，type conversion between class 用dynamic_cast，to remove the const 用const_cast，conversion between pointers使用reinterpret_cast。
 

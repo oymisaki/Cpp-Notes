@@ -87,6 +87,8 @@ new (p) T{a};
 
 + 简单来说是把一个对象转型成rvalue. static_cast<T&&>(t);
 + `foo(std::move(a))` 会调用 `foo(T&& a)` 而不是 `foo(T& a)` 或者 `foo(T a)`
++ **注意std::move只是indicate it may be moved from，并不会internally销毁目标**
++ So set the moved resource to default state is something move constructors should do
 
 不用deep copy,直接把右值的指针搬过来，把右值的指针置为null
 ```cpp
@@ -119,9 +121,48 @@ del = std::move(right_value.del);
 
 Usage in 参数推倒。
 
-和 `std::move` 一样，`std::forward` 也是一种转型，但`std::move`蕴含被转型的对象即将不被使用或即将被赋予新的值的含义, 而`std::forward`没有这层含义。
+Parameter forward example. 现在要把 `wrapper` 的参数传到 `func`
 
-因此`std::forward`经常用于参数比如
+```cpp
+template <typename T1, typename T2>
+void wrapper(T1 e1, T2 e2) {
+    func(e1, e2);
+} // 那么当func参数为引用时，传值会出错
+
+template <typename T1, typename T2>
+void wrapper(T1& e1, T2& e2) {
+    func(e1, e2);
+} // 当给wrapper传入rvalue时报错
+
+template <typename T1, typename T2>
+void wrapper(const T1& e1, const T2& e2) {
+    func(e1, e2);
+} // 当给func需要修改e1时报错
+
+// 唯一的解决办法是写所有可能的模板
+```
+
+`C++ 11` 引入了新的类型推倒type deduction，当`&&`遇到`&`总是`&`胜出。
+```cpp
+template <class T>
+void func(T&& t) {
+} 
+```
+在这个模板里的 `T&&` 不是类型引用，而是告诉编译器怎么做`type deduction`。
+结合`lvalue`和`rvalue`，当传入`lvalue`时，参数解读类型为`T& && = T&`，`rvalue`则为
+`T&& && = T&&`
+
+结合**variadic templates**:
+```cpp
+template<typename T, typename... Args>
+unique_ptr<T> make_unique(Args&&... args)
+{
+    return unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+```
+
+成功做到了，右值传值，左值传引用。
+
 
 ## Smart Pointers
 

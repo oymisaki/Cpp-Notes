@@ -1,93 +1,94 @@
-#ifndef UNIQUE_PTR
-#define UNIQUE_PTR
-
-class Delete
+namespace ThorsAnvil
 {
-public:
-    template <typename T>
-    void operator()(T *p) const
+    template<typename T>
+    class UP
     {
-        delete p;
-    }
-};
+        T*   data;
+        public:
+            UP()
+                : data(nullptr)
+            {}
+            // Explicit constructor
+            explicit UP(T* data)
+                : data(data)
+            {}
+            ~UP()
+            {
+                delete data;
+            }
 
-template <typename T, typename D = Delete>
-class unique_ptr
-{
-private:
-    T *un_ptr = nullptr;
-    D del;
-    /* data */
-public:
-    explicit unique_ptr(T *pp = nullptr, const D &dd = D())
-        : un_ptr(pp), del(dd) {}
-    ~unique_ptr()
+            // Constructor/Assignment that binds to nullptr
+            // This makes usage with nullptr cleaner
+            UP(std::nullptr_t)
+                : data(nullptr)
+            {}
+            UP& operator=(std::nullptr_t)
+            {
+                reset();
+                return *this;
+            }
+
+            // Constructor/Assignment that allows move semantics
+            UP(UP&& moving) noexcept
+            {
+                moving.swap(*this);
+            }
+
+            // its silly to check for self assignment in unique_ptr
+            // as it defines there can be two unique_ptr having the same data
+            UP& operator=(UP&& moving) noexcept
+            {
+                moving.swap(*this);
+                return *this;
+            }
+
+            // Constructor/Assignment for use with types derived from T
+            template<typename U>
+            UP(UP<U>&& moving)
+            {
+                UP<T>   tmp(moving.release());
+                tmp.swap(*this);
+            }
+            template<typename U>
+            UP& operator=(UP<U>&& moving)
+            {
+                UP<T>    tmp(moving.release());
+                tmp.swap(*this);
+                return *this;
+            }
+
+            // Remove compiler generated copy semantics.
+            UP(UP const&)            = delete;
+            UP& operator=(UP const&) = delete;
+
+            // Const correct access owned object
+            T* operator->() const {return data;}
+            T& operator*()  const {return *data;}
+
+            // Access to smart pointer state
+            T* get()                 const {return data;}
+            explicit operator bool() const {return data;}
+
+            // Modify object state
+            T* release() noexcept
+            {
+                T* result = nullptr;
+                std::swap(result, data);
+                return result;
+            }
+            void swap(UP& src) noexcept
+            {
+                std::swap(data, src.data);
+            }
+            void reset()
+            {
+                T* tmp = release();
+                delete tmp;
+            }
+    };
+    template<typename T>
+    void swap(UP<T>& lhs, UP<T>& rhs)
     {
-        del(un_ptr);
+        lhs.swap(rhs);
     }
-
-    unique_ptr(const unique_ptr &) = delete;
-    unique_ptr &operator=(const unique_ptr &) = delete;
-
-    // 右值引用 c++ 11
-    // 重载右值引用拷贝构造函数
-    // 注意noexcept
-    unique_ptr(unique_ptr &&rvalue) noexcept
-    : un_ptr(right_value.un_ptr), del(std::move(right_value.del))
-    {
-        right_value.un_ptr = nullptr;
-    }
-
-    // 赋值
-    // move constructor and swap idiom
-    unique_ptr &operator=(unique_ptr &&right_value) noexcept
-    {
-        if (this != &right_value)
-        {
-            del(un_ptr);
-            un_ptr = right_value.un_ptr;
-
-            // 不是复制而是直接拿取
-            del = std::move(right_value.del);
-            right_value.un_ptr = nullptr;
-        }
-        return *this;
-    }
-
-    // 放弃控制权
-    T *release()
-    {
-        T *tmp = un_ptr;
-        un_ptr = nullptr;
-        return tmp;
-    }
-
-    // 释放资源
-    void reset()
-    {
-        del(un_ptr);
-    }
-
-    void reset(T *q)
-    {
-        if (un_ptr != q)
-        {
-            del(un_ptr);
-            un_ptr = q;
-        }
-    }
-
-    void swap(unique_ptr &other) noexcept
-    {
-        using std::swap;
-        swap(un_ptr, other.un_ptr);
-        swap(del, other.del);
-    }
-
-    T *get() { return un_ptr; }
-    D &get_deleter() { return del; }
-    T &operator*() { return *un_ptr; }
-    T *operator->() { return un_ptr; }
-};
-
-#endif // !UNIQUE_PTR
+}

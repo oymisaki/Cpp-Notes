@@ -1,6 +1,6 @@
 # STL
 
-## what's predicate in c++?
+## what's predicate（谓词） in c++?
 
 **basically a callable entity which is either a function, or a functor (or a lambda, which is essentially a functor or function depending on whether it captures variable(s) or not).**
 
@@ -17,7 +17,7 @@
 
 ### Vector
 + push_back
-+ assign. **mind the difference between copy**
++ assign. **mind the difference between copy**，copy要求是同类型，vector要求可赋值
 
 ### list
 + splice. 
@@ -110,6 +110,16 @@ cout<<buffer.str()<<endl;
 + `iter find(first, last, val)`
 + `iter find_if(first, last, pred)`
 + `iter binary_search(forwardFirst, forwardLast, val, comp)`
+  ```cpp
+  template<class ForwardIt, class T>
+  bool binary_search(ForwardIt first, ForwardIt last, const T& value)
+  {
+      first = std::lower_bound(first, last, value);
+      return (!(first == last) && !(value < *first));
+  }
+  ```
++ `iter lower_bound(first, last, value, comp)` 第一个小于 `value` 的位置
++ `iter lower_bound(first, last, value, comp)` 第一个大于 `value` 的位置
 
 ### Sorting
 + `merge(f1, l1, f2, l2, outputIter, comp)` merge two sorted array

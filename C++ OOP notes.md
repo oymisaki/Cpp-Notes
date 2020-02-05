@@ -31,3 +31,4 @@ derived class can visit protected member of base class, but not the private memb
 + 缺点，需要声明 `tmp` 或者将参数改为 `传值`，带来效率损失
 
 **move assignment不要用**
+因为`move assignment`还需要将moved resource置于default状态

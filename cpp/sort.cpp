@@ -1,68 +1,88 @@
 #include <vector>
 #include <iostream>
+#include <list>
+#include <iterator>
 
 using namespace std;
 
-int partition(vector<int> &nums, int begin, int end)
+template <typename ForwardIter>
+ForwardIter partition(ForwardIter first, ForwardIter last)
 {
-    int j = begin;
+    ForwardIter j = first;
+    auto iter = first;
+    advance(iter, 1);
 
-    int key = nums[begin];
-
-    for (int i = begin + 1; i < end; ++i)
+    for (; iter != last; ++iter)
     {
-        if (nums[i] < key)
+        if (*iter < *first)
         {
             ++j;
-            if (j != i)
+            if (j != iter)
             {
-                swap(nums[i], nums[j]);
+                iter_swap(j, iter);
             }
         }
     }
-    swap(nums[j], nums[begin]);
+    iter_swap(j, first);
     return j;
 }
 
-void quick_sort(vector<int> &nums, int begin, int end)
+template <typename ForwardIter>
+void quick_sort(ForwardIter first, ForwardIter last)
 {
-    if (begin < end)
+    if (first != last)
     {
-        int mid = partition(nums, begin, end);
-        quick_sort(nums, begin, mid);
-        quick_sort(nums, mid + 1, end);
+        auto mid = partition(first, last);
+        quick_sort(first, mid);
+        quick_sort(++mid, last);
     }
 }
-
-void merge(vector<int> &nums, int first, int mid, int last, vector<int> &res)
+template <typename ForwardIter>
+void merge(ForwardIter first, ForwardIter mid, ForwardIter last, ForwardIter dst)
 {
-    int i = first, j = mid;
-    int m = mid, n = last;
+    auto mid_begin = mid;
+    auto begin = first;
+    auto tmp = dst;
 
-    int k = first;
-    while (i < m && j < n)
+    while (begin != mid && mid_begin != last)
     {
-        if (nums[i] < nums[j])
-            res[k++] = nums[i++];
+        if (*begin <= *mid_begin)
+            *(tmp++) = *(begin++);
         else
-            res[k++] = nums[j++];
+            *(tmp++) = *(mid_begin++);
     }
-    while (i < m)
-        res[k++] = nums[i++];
-    while (j < n)
-        res[k++] = nums[j++];
-    for(int i = first; i < last; ++i)
-        nums[i] = res[i];
+
+    while (begin != mid)
+        *(tmp++) = *(begin++);
+    while (mid_begin != last)
+        *(tmp++) = *(mid_begin++);
+
+    while (first != last)
+        *(first++) = *(dst++);
 }
 
-void merge_sort(vector<int> &nums, int begin, int end, vector<int> &res)
+template <typename ForwardIter>
+void merge_sort(ForwardIter first, ForwardIter last, ForwardIter dst)
 {
-    if (begin < end - 1)
+
+    int d = distance(first, last);
+    if (d > 1)
     {
-        int mid = (begin + end) / 2;
-        merge_sort(nums, begin, mid, res);
-        merge_sort(nums, mid, end, res);
-        merge(nums, begin, mid, end, res);
+        auto mid = first;
+        auto tmp = dst;
+        advance(mid, d / 2);
+        merge_sort(first, mid, tmp);
+
+        copy(first, mid, ostream_iterator<typename iterator_traits<ForwardIter>::value_type>(cout, " "));
+        cout<<endl;
+
+        advance(tmp, d / 2);
+        merge_sort(mid, last, tmp);
+        
+        copy(mid, last, ostream_iterator<typename iterator_traits<ForwardIter>::value_type>(cout, " "));
+        cout<<endl;
+
+        merge(first, mid, last, dst);
     }
 }
 
@@ -95,9 +115,9 @@ void selection_sort(vector<int> &nums, int begin, int end)
 int main()
 {
 
-    vector<int> nums = {5, 3, 2, 4, 1};
-    vector<int> res(5);
-    merge_sort(nums, 0, 5, res);
+    list<int> nums = {5, 3, 2, 4, 1, 6, 78, 9};
+    list<int> res(8);
+    merge_sort(nums.begin(), nums.end(), res.begin());
 
     for (int i : res)
     {

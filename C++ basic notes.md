@@ -238,6 +238,21 @@ int main()
 } 
 ```
 
+**more on `nullptr`**
+We can **safely delete a nullptr** and it will not cause any exception.
+
+But delete a pointer does not mean setting it to nullptr 
+```cpp
+int * p = new int(1);
+delete p;
+delete p; // 0x11111111 some address, undefined behavior
+cout << p; // 
+
+p = nullptr;
+delete p; // safe
+```
+
+
 ### volatile
 
 **prevent aggresssive optimization**

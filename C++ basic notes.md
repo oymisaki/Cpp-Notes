@@ -166,6 +166,17 @@ unique_ptr<T> make_unique(Args&&... args)
 
 ## Smart Pointers
 
+**实现智能指针应该注意的点**
++ explicit 构造
++ explicit bool转型
++ noexcept
++ swap函数
++ 基类子类指针之间的赋值和构造
++ 在构造失败时释放资源
++ const
++ 移动构造
+
+
 ### unique_ptr
 + `release()` 解除控制内存的权利和义务，返回`raw pointer`
 + `reset()` 释放内存
@@ -345,9 +356,9 @@ class ThreadsafeCounter {
 
 ### decltype & auto
 
-`auto` will be exactly the same as the type of the return value, if a function returns a reference, then the auto will also be reference.
+`decltype` will be exactly the same as the type of the return value, if a function returns a reference, then the auto will also be reference.
 
-`decltype` will only take the type of the input.
+`auto` will only take the type of the input, need `auto&` to declare reference.
 
 ### noexcept
 **允许编译器做出更多更好的优化**
@@ -360,10 +371,11 @@ class ThreadsafeCounter {
 当 `copy constuctor` 出现异常，可以保证源对象不变，新对象没有创造，而 `move constructor` 异常可能会使得源对象变化，从而带来不确定性，因此在 `vector` 等容器中使用 `resize()` 等函数时，涉及到创建一片新的内存空间，并将旧的数据复制过去，此时使用 `move constructor` 会更快一点，但 `std::vector`会确认对象的 `move constrcutor` 是 `noexcept` 的，否则出于安全考虑，他还是会调用 `copy constructor`，即便效率更低。 
 
 ## type conversion
-在C++中built-in type 转换使用static_cast，type conversion between class 用dynamic_cast，to remove the const 用const_cast，conversion between pointers使用reinterpret_cast。
+type conversion between class 用dynamic_cast，to remove the const 用const_cast，conversion between pointers使用reinterpret_cast。
 
-## (typename) vs. static_cast
-`(typename)` is a strong conversion, like `reinterpret_cast`, while static_cast pose some type checks and constraints.
++ `static_cast`，不会在runtime检查，使用时就知道会传入什么
++ `dynamic_cast`, 会在runtime检查有没有关系，并且在`down-cast`时不支持没有虚函数的基类
++ `(typename)` 只用于`built-in`类型，是将`static_cast`, `reinterpret_cast`结合到一起的
 
 ## inline vs. macro
 

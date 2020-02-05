@@ -23,8 +23,7 @@ public:
         : un_ptr(pp), del(dd) {}
     ~unique_ptr()
     {
-        if(un_ptr)
-            del(un_ptr);
+        del(un_ptr);
     }
 
     unique_ptr(const unique_ptr &) = delete;
@@ -45,8 +44,7 @@ public:
     {
         if (this != &right_value)
         {
-            if(un_ptr)
-                del(un_ptr);
+            del(un_ptr);
             un_ptr = right_value.un_ptr;
 
             // 不是复制而是直接拿取
@@ -67,16 +65,14 @@ public:
     // 释放资源
     void reset()
     {
-        if (un_ptr)
-            del(un_ptr);
+        del(un_ptr);
     }
 
     void reset(T *q)
     {
         if (un_ptr != q)
         {
-            if (un_ptr)
-                del(un_ptr);
+            del(un_ptr);
             un_ptr = q;
         }
     }

@@ -354,6 +354,22 @@ class ThreadsafeCounter {
 + `[=, &i]` 默认值捕获，i以引用捕获
 + `[&]( auto x ) -> int { return x;  }`
 
+**使用lambda表达式一定要注意不要瞎传引用, 特别是函数里的局部变量**
+```cpp
+  void add_event(int t, function<void()> e)
+  {
+      auto f = [=] {
+          std::this_thread::sleep_for(chrono::seconds(t));
+          cout << t << endl;
+          e();
+      };
+
+      events.emplace_back(t, f);
+  }
+```
+上述代码中，`e` 和 `t` 都是局部变量，如果设置为引用，则会出现`undefined behaviour`
+
+
 ### decltype & auto
 
 `decltype` will be exactly the same as the type of the return value, if a function returns a reference, then the auto will also be reference.

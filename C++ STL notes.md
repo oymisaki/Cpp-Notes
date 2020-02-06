@@ -81,6 +81,23 @@ l1.assign(l2.begin(), l2.end());
 >+ Weaker exception safety than standard associative containers (copy/move constructors can throw when shifting values in erasures and insertions)
 >+ Slower insertion and erasure than standard associative containers (specially for non-movable types)
 
+### priority_queue
+```cpp
+template<
+    class T,
+    class Container = std::vector<T>,
+    class Compare = std::less<typename Container::value_type>
+> class priority_queue;
+```
+默认**最大**在堆顶.
+```cpp
+std::priority_queue<int, std::vector<int>, std::greater<int> > q; // 最小值堆
+```
+
++ `pq.push()`
++ `pq.pop()`
++ `emplace()`
+
 ## Iterators
 
 + `back_inserter()`. push_back functionalities

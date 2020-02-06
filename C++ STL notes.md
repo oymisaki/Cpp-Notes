@@ -123,7 +123,8 @@ cout<<buffer.str()<<endl;
 
 ### Sorting
 + `merge(f1, l1, f2, l2, outputIter, comp)` merge two sorted array
-+ `partition (myvector.begin(), myvector.end(), IsOdd);` partion inplace and return a iterator
++ `partition (myvector.begin(), myvector.end(), IsOdd);` 
+  partion inplace and return a iterator, **谓词为true的移到前面**
 + `reverse()` inplace
 + `rotate (first, middle, last)` inplace. Middle becomes the new first.
 + `sort()`

@@ -11,6 +11,13 @@
 + Thread-local storage
 + Atomic operations
 
+**注意**
++ 生成的`thread`一定要`join()`，程序结束时留下任何 `joinable` 的线程都会出现错误！
++ 一定要注意线程的时机，是添加`event`的时候就创建吗？还是开始全部`event`的时候才创建！
++ 互斥量保护的数据的位置
++ `cv.notify_all()` 与 `cv.wait()` 要相互对应
++ `unique_lock` 的锁粒度
+
 ### What is thread safety
 + 多线程能够共享同一块数据的同时保证每次只有一个线程在访问共享数据
 
@@ -346,6 +353,25 @@ Lowest level
 + `package_task` 则把 `async` 做的工作拆开，`package_task`专门将要执行的工作封装成一个`callable`，什么时候创建进程并调用`task`由用户决定，并且`package_task`在创建时就与`future`绑定
 + `promises` 更往底层，可以用来实现 `package_task`
 
+### 限定等待时间
++ 当前时间 `std::chrono::high_resolution_clock::now()`
++ 获取当前时间的差值, `std::chrono::duration<double>(stop-start).count()`
+
+**std::chrono::duration**
++ `std::chrono::seconds(1000);` 创建秒数的duration
++ `std::chrono::duration<double, ratio<1, 1000>>`, 创建毫秒数的duration
+
+**结合sleep_for, wait_for**
+```cpp
+this_thread::sleep_for(chrono::duration<double, std::ratio<1, 1000>>(1)); // 1ms
+```
+
+**time_point**
++ `std::chrono::system_lock:time_point`
++ `std::chrono::steady_lock:time_point`
++ `std::chrono::high_resolution_clock::time_point`
+  等价于 `std::chrono::time_point<std::chrono::high_resolution_clock>`
+
 ## C++内存模型和原子操作
 
 ### Memory Order
@@ -394,6 +420,6 @@ Lowest level
 + 在store()之前的所有写操作，不允许被移动到这个store()的后面。
 + 在load()之后的所有读操作，不允许被移动到这个load()的前面
 
-**真难**
+
 
 

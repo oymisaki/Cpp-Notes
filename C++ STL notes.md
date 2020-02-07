@@ -92,7 +92,7 @@ template<
     class Compare = std::less<typename Container::value_type>
 > class priority_queue;
 ```
-默认**最大**在堆顶.
+默认**最大**在堆顶. 并且有默认的底层结构 `vector<T>`
 ```cpp
 std::priority_queue<int, std::vector<int>, std::greater<int> > q; // 最小值堆
 ```

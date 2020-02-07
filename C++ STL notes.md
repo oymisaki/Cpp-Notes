@@ -146,8 +146,8 @@ cout<<buffer.str()<<endl;
       return (!(first == last) && !(value < *first));
   }
   ```
-+ `iter lower_bound(first, last, value, comp)` 第一个小于 `value` 的位置
-+ `iter lower_bound(first, last, value, comp)` 第一个大于 `value` 的位置
++ `iter lower_bound(first, last, value, comp)` 第一个不小于 `value` 的位置
++ `iter upper_bound(first, last, value, comp)` 第一个大于 `value` 的位置
 
 ### Sorting
 + `merge(f1, l1, f2, l2, outputIter, comp)` merge two sorted array
@@ -177,6 +177,8 @@ cout<<buffer.str()<<endl;
 + `transform(first, last, function)`
 
 ### Numeric
+头文件`<numeric>`
+
 + `accumulate(first, last, initial)`
 + `adjacent_difference(first, last, outputIter)`
 + `partial_sum(first, last, outputIter)`

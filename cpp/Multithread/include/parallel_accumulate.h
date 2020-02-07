@@ -3,6 +3,8 @@
 
 #include <algorithm>
 
+// accumulate can not deduce the iterator type
+// so use this to encapulate
 template <typename Iterator, typename T>
 struct accumulate_block
 {

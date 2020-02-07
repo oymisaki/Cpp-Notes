@@ -62,6 +62,14 @@ list<B> l2;
 l1.assign(l2.begin(), l2.end());
 ```
 
+### set
+
++ `insert()`
++ `emplace()`
++ `clear()`
++ `erase()`
++ `contains()`
++ `find()`
 
 ### Map
 

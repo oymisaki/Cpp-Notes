@@ -305,7 +305,7 @@ void consumer_thread()
 
 ### 等待一次性事件
 
-**头文件<future>**
+**头文件`<future>`**
 
 等待一个事件或者接受一个`result`，与 `std::async` 可以一起用, `std::async(func)`会在执行完后返回一个`future<>()`对象，
 需要使用对象时调用，`future_obj.get()` 来获取结果，并且如果此时结果没有计算完成还会 `block` 当前进程.

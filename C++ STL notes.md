@@ -137,7 +137,7 @@ cout<<buffer.str()<<endl;
 
 + `iter find(first, last, val)`
 + `iter find_if(first, last, pred)`
-+ `iter binary_search(forwardFirst, forwardLast, val, comp)`
++ `bool binary_search(forwardFirst, forwardLast, val, comp)`
   ```cpp
   template<class ForwardIt, class T>
   bool binary_search(ForwardIt first, ForwardIt last, const T& value)
@@ -174,7 +174,8 @@ cout<<buffer.str()<<endl;
   std::for_each(threads.begin(),threads.end(),
        std::mem_fn(&std::thread::join));
   ```
-+ `transform(first, last, function)`
++ `transform(first, last, output, function)`, 也有一个接收两个参数的版本
+  `transform(first, last, first2, output, function)`
 
 ### Numeric
 头文件`<numeric>`

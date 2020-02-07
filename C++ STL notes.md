@@ -184,8 +184,10 @@ cout<<buffer.str()<<endl;
 + `partial_sum(first, last, outputIter)`
 
 ### Set
-+ `set_union()`
-+ `set_difference()`
++ `set_union()` 需要传入两个有序的范围，复杂度是线性的
++ `set_difference()` 同上
++ `set_intersection()` 范围只需要有序即可
+对于 `unordered_set`，标准库没有提供函数，只能自己手写一个求交求并的函数。
 
 ## Function Objects
 

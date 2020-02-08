@@ -107,7 +107,23 @@ std::priority_queue<int, std::vector<int>, std::greater<int> > q; // 最小值�
 
 + `pq.push()`
 + `pq.pop()`
++ `pq.top()`
 + `emplace()`
+
+### queue
+
+Internally deque.
+
++ `q.push()` `q.pop()`
++ `q.front()` `q.back()`
+
+### deque
+
+It is implemented by vectror of vectors `data chunks`, thus provides random access, but the data is **not necessarilly continuous.**
+
+**头文件`<deque>`**
++ `push_back()` `pop_back()`
++ `push_front()` `pop_front()`
 
 ## Iterators
 

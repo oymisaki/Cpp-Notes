@@ -398,6 +398,9 @@ type conversion between class 用dynamic_cast，to remove the const 用const_cas
 + `dynamic_cast`, 会在runtime检查有没有关系，并且在`down-cast`时不支持没有虚函数的基类
 + `(typename)` 只用于`built-in`类型，是将`static_cast`, `reinterpret_cast`结合到一起的
 
+**注意implicit type conversion**
+`1 / 2 = 0`, because `iint / int = int`, to prevent such conversion, should explicitly convert them to other types first.
+
 ## inline vs. macro
 
 inlining can reduce the costs of function calling stack. it still has type check in function, so safer than macro #define.

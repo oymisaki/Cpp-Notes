@@ -177,13 +177,18 @@ unique_ptr<T> make_unique(Args&&... args)
 + 移动构造
 
 
+**关于智能指针的线程安全性**
++ 智能指针内部保证析构和引用计数是线程安全的，比如`shared_ptr`引用计数的自增自减都是原子操作，
+析构函数只调用一次。`weak_ptr.lock`等都是原子操作。
++ 但不保证对其指向的数据块的线程安全性
+
 ### unique_ptr
 + `release()` 解除控制内存的权利和义务，返回`raw pointer`
 + `reset()` 释放内存
 
 ### weak_ptr
-+ `lock()` 
-+ `expired()` 是否引用计数为0
++ `lock()` 返回等价于 `expired() ? shared_ptr<T>() : shared_ptr<T>(*this)`，因此可能返回空对象
++ `expired()` 是否引用计数为0, 返回 `true or false`
 
 ### do not use get() in shared_ptr
 

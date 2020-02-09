@@ -417,7 +417,21 @@ m.insert(std::make_pair(4, Complicated(anInt, aDouble, aString)));
 m.emplace(4, anInt, aDouble, aString);
 ```
 
+## 编写自己的异常类
 
+```cpp
+class Exception : public std::exception
+{
+    std::string _msg;
+public:
+    Exception(const std::string& msg) : _msg(msg){}
+
+    virtual const char* what() const noexcept override
+    {
+        return _msg.c_str();
+    }
+}; 
+```
 
 # 操作系统
 

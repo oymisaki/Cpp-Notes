@@ -208,6 +208,9 @@ shared_ptr<D> spd =shared_dynamic_cast<D>(spb);//变成子类的指针
 
 >This is exactly what a weak pointer does -- it allows you to locate an object if it's still around, but doesn't keep it around if nothing else needs it.
 
+**shared_ptr的control block因此多出了一个weak_count**
+And because of this, the `control block` of `shared_ptr` will also contains a weak count of how many weak pointers pointed to the resource, and the `shared_count` pointer will not be deleted after the `weak_count` became 0.
+
 ```cpp
 #include <iostream>
 #include <memory>
@@ -245,7 +248,7 @@ function ( shared_ptr<int>(new int), g( ) );
 
 ### A basic use of weak_ptr together with shared_ptr
 倘若树的节点，同时包含指向子节点的指针和父节点的指针，如果都用`shared_ptr`，会出现循环引用的问题。
-因此可以把指向父节点的指针声明成 `weak_ptr`
+因此可以把指向父节点的指针声明成 `weak_ptr`.
 
 ### shared_ptr and make_shared
 
